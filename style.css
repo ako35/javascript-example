@@ -1,0 +1,41 @@
+#map {
+  width: 100%;
+  height: 100vh;
+  z-index: 0;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden; /* Yatay scrollbar'ı gizle */
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 650px;
+  height: 100vh;
+  transition: right 0.3s ease;
+  background-color: aliceblue;
+}
+
+.sidebar .title {
+  display: flex;
+  background-color: orangered;
+}
+
+.sidebar i.rota {
+  color: aliceblue;
+  background-color: chocolate;
+  padding: 24px;
+}
+
+.sidebar h2 {
+  padding: 24px;
+  color: aliceblue;
+}
+
+.sidebar .container {
+  padding: 24px;
+}
