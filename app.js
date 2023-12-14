@@ -2,45 +2,19 @@
 const sidebar = document.getElementById('sidebarId');
 const sidebarBefore = document.getElementById('sidebar-before');
 const arowLeft = document.getElementById('arow-left');
-
-const paketKoliListesi1 = document.getElementById('paket_koli_listesi1');
-const nokta1 = document.getElementById('nokta1');
-const plnBaslangicTarihi1 = document.getElementById('pln_baslangic_tarihi1');
-
-const paketKoliListesi2 = document.getElementById('paket_koli_listesi2');
-const nokta2 = document.getElementById('nokta2');
-const plnBaslangicTarihi2 = document.getElementById('pln_baslangic_tarihi2');
-
 const ilSecimi = document.getElementById('ilSecimi');
 const ilceSecimi = document.getElementById('ilceSecimi');
-
-const checkbox1 = document.getElementById('checkbox1');
-const checkbox2 = document.getElementById('checkbox2');
-
-const guzergah1 = document.getElementById('guzergah1');
-const cikis1 = document.getElementById('cikis1');
-
-const guzergah2 = document.getElementById('guzergah2');
-const cikis2 = document.getElementById('cikis2');
-
-const div1 = document.getElementById('div1');
-const div2 = document.getElementById('div2');
-
+let takipNoInput = document.getElementById('takip_no');
+let toplamKm = document.getElementById('toplam_km');
 let siparislerData = [];
 let rotalarData = [];
 
 sidebarBefore.addEventListener('click', () => {
-    const isOpen = sidebar.style.right === '0px';
-    if (isOpen) {
-        sidebar.style.right = '-650px';
-        arowLeft.style.transform = 'rotate(0deg)';
+        const isOpen = sidebar.style.right === '0px';
+        sidebar.style.right = isOpen ? '-650px' : '0';
+        arowLeft.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
         arowLeft.style.transition = 'transform 0.9s ease';
-    } else {
-        sidebar.style.right = '0';
-        arowLeft.style.transform = 'rotate(180deg)';
-        arowLeft.style.transition = 'transform 0.9s ease';
-    }
-})
+    });
 
 const dataSiparisler = async () => {
     try {
@@ -98,17 +72,27 @@ ilSecimi.addEventListener('change', () => {
 
 const showSelectedDistrictPoints = () => {
     clearMap();
+    clearMapRoutes();
     const selectedDistricts = Array.from(ilceSecimi.selectedOptions).map(option => option.value);
-    
     if (selectedDistricts.length === 0) {
 
         const selectedCity = ilSecimi.value;
         const filteredSiparisler = siparislerData.filter(siparis => siparis.city_name === selectedCity);
         addSiparisToMap(filteredSiparisler);
+
     } else {
         selectedDistricts.forEach(selectedDistrict => {
             const filteredSiparisler = siparislerData.filter(siparis => siparis.district_name === selectedDistrict);
             addSiparisToMap(filteredSiparisler);
+
+            filteredSiparisler.forEach(siparis => {
+                const matchingRoute = rotalarData.find(route => route.route_id === siparis.route_id);
+                if (matchingRoute) {
+                    const routeColor = matchingRoute.route_color || 'blue';
+                    const polyline = L.polyline(matchingRoute.path, { color: routeColor });
+                    polyline.addTo(map);
+                }
+            })
         });
     }
 };
@@ -133,6 +117,7 @@ const showSelectedCityPoints = (selectedCity) => {
 
 const searchByCustomerName = (event) => {
     clearMap();
+    clearMapRoutes();
     const searchText = event.target.value.toLowerCase();
     const filteredSiparisler = siparislerData.filter(siparis =>
         siparis.customer_no.toLowerCase().includes(searchText)
@@ -141,6 +126,12 @@ const searchByCustomerName = (event) => {
     addSiparisToMap(filteredSiparisler);
 };
 
+const searchByOrderNoInput = (event) => {
+    if (event.target.value === "") {
+        addSiparisToMap(siparislerData);
+    }
+}
+
 const handleEnter = (event) => {
     if (event.key === "Enter") {
         searchByOrderNo();
@@ -148,20 +139,23 @@ const handleEnter = (event) => {
 };
 
 const searchByOrderNo = () => {
-    clearMap();
-    const takipNoInput = document.getElementById('takip_no');
-    const searchOrderNo = takipNoInput.value.trim();
+    
+    let searchOrderNo = takipNoInput.value.trim();
 
     if (searchOrderNo === "") {
-        alert("Lütfen bir takip numarası girin.");
-        return;
+
+        addSiparisToMap(siparislerData);
     }
 
     const filteredSiparisler = siparislerData.filter(siparis => siparis.order_no === searchOrderNo);
 
     if (filteredSiparisler.length === 0) {
+        clearMap();
+        clearMapRoutes();
         alert("Belirtilen takip numarasına sahip sipariş bulunamadı.");
     } else {
+        clearMap();
+        clearMapRoutes();
         addSiparisToMap(filteredSiparisler);
     }
 };
@@ -207,7 +201,7 @@ const addSiparisToMap = (siparisler) => {
                             <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6" />
                             <circle cx="8" cy="6" r="4" fill="white" />
                             <text x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="#000" font-size="6">${siparis.route_id ? siparis.sira : ''}</text>
-                        </svg>`, 
+                        </svg>`,
             iconSize: [30, 30],
             iconAnchor: [15, 15],
             popupAnchor: [0, -15],
@@ -222,7 +216,7 @@ const addSiparisToMap = (siparisler) => {
             iconSize: [30, 30],
             iconAnchor: [15, 15],
             popupAnchor: [0, -15],
-            backgroundColor: markerColor, 
+            backgroundColor: markerColor,
         });
 
         const marker = L.marker([siparis.latitude, siparis.longitude], {
@@ -230,45 +224,14 @@ const addSiparisToMap = (siparisler) => {
         });
 
         marker.addTo(map);
+
+        if (siparis.route_id) {
+            const matchingRoute = rotalarData.find(route => route.route_id === siparis.route_id);
+            if (matchingRoute) {
+                addRoutesToMap([matchingRoute]);
+            }
+        }
     });
-};
-
-
-const dataRotalar = async () => {
-    try {
-        const response = await fetch("rotalar.json");
-        const data = await response.json();
-        rotalarData.push(...data.data);
-        addRoutesToMap(rotalarData);
-        toplamKmWrite();
-
-        paketKoliListesi1.textContent = rotalarData[1].package_count;
-        nokta1.textContent = rotalarData[1].point_count;
-        plnBaslangicTarihi1.textContent = rotalarData[1].route_date + " " + rotalarData[1].route_start_time;
-
-        paketKoliListesi2.textContent = rotalarData[0].package_count;
-        nokta2.textContent = rotalarData[0].point_count;
-        plnBaslangicTarihi2.textContent = rotalarData[0].route_date + " " + rotalarData[0].route_start_time;
-        if (checkbox1.checked) {
-            guzergah1.textContent = rotalarData[1].route_name;
-            cikis1.textContent = "[ Cikis" + " " + rotalarData[1].route_start_time + " ]";
-            div1.style.backgroundColor = rotalarData[1].route_color;
-            div1.style.borderRadius = "30px";
-        }
-        if (checkbox2.checked) {
-            guzergah2.textContent = rotalarData[0].route_name;
-            cikis2.textContent = "[ Cikis" + " " + rotalarData[0].route_start_time + " ]";
-            div2.style.backgroundColor = rotalarData[0].route_color;
-            div2.style.borderRadius = "30px";
-        }
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const toplamKmWrite = () => {
-    const toplamKm = rotalarData.reduce((total, route) => total + route.route_km, 0);
-    document.getElementById('toplam_km').textContent = toplamKm.toFixed(2);
 };
 
 const addRoutesToMap = (routes) => {
@@ -279,23 +242,170 @@ const addRoutesToMap = (routes) => {
     });
 };
 
+const addCheckBox = () => {
+    rotalarData.forEach(route => {
+        const rotaItem = createRotaItem(route);
+        const rotaDetails = createRotaDetails(route);
+
+        rotaListesiContainer.appendChild(rotaItem);
+        rotaListesiContainer.appendChild(rotaDetails);
+
+        const paketKoliListesiId = `paket_koli_listesi${route.route_id}`;
+        const paketKoliListesi = document.getElementById(paketKoliListesiId);
+        paketKoliListesi.textContent = route.package_count;
+
+
+        const noktaId = `nokta${route.route_id}`;
+        const nokta = document.getElementById(noktaId);
+        nokta.textContent = route.point_count;
+
+        const plnBaslangicTarihiId = `pln_baslangic_tarihi${route.route_id}`;
+        const plnBaslangicTarihi = document.getElementById(plnBaslangicTarihiId);
+        plnBaslangicTarihi.textContent = route.route_date + " " + route.route_start_time;
+
+        const checkboxId = `checkbox${route.route_id}`;
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox.checked) {
+            const guzergahId = `guzergah${route.route_id}`;
+            const guzergah = document.getElementById(guzergahId);
+            const cikisId = `cikis${route.route_id}`;
+            const cikis = document.getElementById(cikisId);
+            const divId = `div${route.route_id}`;
+            const div = document.getElementById(divId);
+            guzergah.textContent = route.route_name;
+            cikis.textContent = `[ Cıkış ${route.route_start_time} ]`;
+            div.style.backgroundColor = route.route_color;
+            div.style.borderRadius = "30px";
+        }
+        checkbox.addEventListener('change', checkboxChangeHandler);
+    });
+}
+
+const dataRotalar = async () => {
+    try {
+        const response = await fetch("rotalar.json");
+        const data = await response.json();
+        rotalarData.push(...data.data);
+        addRoutesToMap(rotalarData);
+        toplamKmWrite();
+        addCheckBox();
+
+    } catch (err) {
+        console.error(err);
+
+    }
+};
+
+const toplamKmWrite = () => {
+    const toplam = rotalarData.reduce((total, route) => total + route.route_km, 0);
+    toplamKm.textContent = toplam.toFixed(2);
+};
+
 const checkboxChangeHandler = () => {
     clearMapRoutes();
-    if (checkbox1.checked) {
-        addRoutesToMap([rotalarData[1]]);
-    }
-    if (checkbox2.checked) {
-        addRoutesToMap([rotalarData[0]]);
-    }
+    clearMap();
+
+    let toplam = 0;
+    const selectedRoutes = [];
+
+    rotalarData.forEach((route) => {
+        const checkbox = document.getElementById(`checkbox${route.route_id}`);
+
+        if (checkbox.checked) {
+            addRoutesToMap([route]);
+            selectedRoutes.push(route);
+            toplam += route.route_km; 
+        }
+    });
+
+    toplamKm.textContent = toplam.toFixed(2); 
+
+    const filteredSiparisler = siparislerData.filter((siparis) => {
+        return selectedRoutes.some((selectedRoute) => siparis.route_id === selectedRoute.route_id);
+    });
+
+    addSiparisToMap(filteredSiparisler);
+};
+
+
+const rotaListesiContainer = document.getElementById('rotaListesiContainer');
+
+const createRotaItem = (route) => {
+    const div = document.createElement('div');
+    div.classList.add('col-12', 'p-3');
+    div.id = `div${route.route_id}`;
+
+    const checkbox = document.createElement('input');
+    checkbox.classList.add('form-check-input', 'fs-4');
+    checkbox.type = 'checkbox';
+    checkbox.id = `checkbox${route.route_id}`;
+    checkbox.checked = true;
+
+    const guzergahSpan = document.createElement('span');
+    guzergahSpan.classList.add('fs-4');
+    guzergahSpan.id = `guzergah${route.route_id}`;
+    guzergahSpan.textContent = route.route_name;
+
+    const cikisSpan = document.createElement('span');
+    cikisSpan.classList.add('fs-4');
+    cikisSpan.id = `cikis${route.route_id}`;
+    cikisSpan.textContent = `[ Çıkış ${route.route_start_time} ]`;
+
+    const searchIcon = document.createElement('i');
+    searchIcon.classList.add('bi', 'bi-search', 'fs-4');
+
+    div.appendChild(checkbox);
+    div.appendChild(guzergahSpan);
+    div.appendChild(cikisSpan);
+    div.appendChild(searchIcon);
+
+    return div;
+}
+
+const createRotaDetails = (route) => {
+    const detailsDiv = document.createElement('div');
+    detailsDiv.classList.add('row', 'p-3');
+
+    const createColDiv = (colClass, labelContent, spanId, spanContent) => {
+        const colDiv = document.createElement('div');
+        colDiv.classList.add(colClass, 'p-3');
+
+        const rowDiv = document.createElement('div');
+        rowDiv.classList.add('row');
+
+        const colLabelDiv = document.createElement('div');
+        colLabelDiv.classList.add('col');
+
+        const label = document.createElement('label');
+        label.classList.add('form-label', 'fs-5');
+        label.textContent = labelContent;
+
+        const colSpanDiv = document.createElement('div');
+        colSpanDiv.classList.add('col');
+
+        const span = document.createElement('span');
+        span.classList.add('fs-5', 'fw-bold');
+        span.id = spanId;
+        span.textContent = spanContent;
+
+        colLabelDiv.appendChild(label);
+        colSpanDiv.appendChild(span);
+        rowDiv.appendChild(colLabelDiv);
+        rowDiv.appendChild(colSpanDiv);
+        colDiv.appendChild(rowDiv);
+
+        return colDiv;
+    };
+
+    detailsDiv.appendChild(createColDiv('col-8', `paket_koli_listesi`, `paket_koli_listesi${route.route_id}`, route.package_count));
+    detailsDiv.appendChild(createColDiv('col-4', `nokta`, `nokta${route.route_id}`, route.point_count));
+    detailsDiv.appendChild(createColDiv('col-12', `pln_baslangic_tarihi`, `pln_baslangic_tarihi${route.route_id}`, `${route.route_date} ${route.route_start_time}`));
+
+    return detailsDiv;
 };
 
 document.addEventListener('DOMContentLoaded', dataSiparisler);
 document.addEventListener('DOMContentLoaded', dataSiparislerCity);
 document.addEventListener('DOMContentLoaded', dataRotalar);
 
-checkbox1.addEventListener('change', checkboxChangeHandler);
-checkbox2.addEventListener('change', checkboxChangeHandler);
-
 ilceSecimi.addEventListener('change', showSelectedDistrictPoints);
-
-

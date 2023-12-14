@@ -56,7 +56,8 @@
         </div>
         <div class="col-6 mb-3">
           <div class="input-group">
-            <input type="text" id="takip_no" class="form-control" placeholder="Takip No" onkeydown="handleEnter(event)">
+            <input type="text" id="takip_no" class="form-control" placeholder="Takip No" onkeydown="handleEnter(event)"
+              oninput="searchByOrderNoInput(event)">
           </div>
         </div>
       </div>
@@ -70,58 +71,11 @@
     <hr>
     <div class="container2" style="border: 1px solid rgb(207, 201, 201); padding: 10px; margin: 10px">
       <div class="row" style="margin: 0; padding: 0">
-        <div class="col-12 p-3" id="div1">
-          <input class="form-check-input fs-4" type="checkbox" id="checkbox1" checked />
-          <span class="fs-4" id="guzergah1"></span>
-          <span class="fs-4" id="cikis1"></span>
-          <i class="bi bi-search fs-4"></i>
+        
+        <div class="row" style="margin: 0; padding: 0" id="rotaListesiContainer">
+
         </div>
-        <div class="row p-3">
-          <div class="col-8 p-3">
-            <div class="row">
-              <div class="col-9"><label class="form-label fs-5">paket_koli_listesi1</label></div>
-              <div class="col-3"><span class="fs-5 fw-bold" id="paket_koli_listesi1"></span></div>
-            </div>
-          </div>
-          <div class="col-4 p-3">
-            <div class="row">
-              <div class="col"><label class="form-label fs-5">nokta1</label></div>
-              <div class="col"><span class="fs-5 fw-bold" id="nokta1"></span></div>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="row">
-              <div class="col"><label class="form-label fs-5">pln_baslangic_tarihi1</label></div>
-              <div class="col"><span class="fs-5 fw-bold" id="pln_baslangic_tarihi1"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 p-3" id="div2">
-          <input class="form-check-input fs-4" type="checkbox" id="checkbox2" checked>
-          <span class="fs-4" id="guzergah2"></span>
-          <span class="fs-4" id="cikis2"></span>
-          <i class="bi bi-search fs-4"></i>
-        </div>
-        <div class="row p-3">
-          <div class="col-8 p-3">
-            <div class="row">
-              <div class="col-9"><label class="form-label fs-5">paket_koli_listesi2</label></div>
-              <div class="col-3"><span class="fs-5 fw-bold" id="paket_koli_listesi2"></span></div>
-            </div>
-          </div>
-          <div class="col-4 p-3">
-            <div class="row">
-              <div class="col"><label class="form-label fs-5">nokta2</label></div>
-              <div class="col"><span class="fs-5 fw-bold" id="nokta2"></span></div>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="row">
-              <div class="col"><label class="form-label fs-5">pln_baslangic_tarihi2</label></div>
-              <div class="col"><span class="fs-5 fw-bold" id="pln_baslangic_tarihi2"></span></div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
     <hr>
